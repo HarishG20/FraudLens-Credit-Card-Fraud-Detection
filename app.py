@@ -456,7 +456,7 @@ def render_batch_analysis():
 
     active_threshold = threshold_info["threshold"]
 
-    col_upload, col_sample = st.columns([2, 1])
+    col_upload, col_sample = st.columns([2, 1.2])
     with col_upload:
         uploaded_file = st.file_uploader(
             "Upload Transaction File (CSV)",
@@ -465,56 +465,76 @@ def render_batch_analysis():
         )
     with col_sample:
         st.markdown("<p style='font-size: 0.85rem; font-weight: 600; color: #94A3B8;'>Or Test with Built-in Data</p>", unsafe_allow_html=True)
-        use_sample_test = st.button("Load 500 Test Samples (Mixed Normal & Fraud)")
+        c_btn1, c_btn2 = st.columns(2)
+        use_sample_test = c_btn1.button("⚡ Load 500 Samples", use_container_width=True)
+        clear_batch = c_btn2.button("🗑️ Clear Batch", use_container_width=True)
 
-    df_to_analyze = None
-    source_name = ""
+    if clear_batch:
+        st.session_state.pop("batch_df", None)
+        st.session_state.pop("batch_result_df", None)
+        st.session_state.pop("batch_source", None)
+        st.session_state.pop("last_uploaded_file_id", None)
+        st.rerun()
 
+    # Track uploads in session state
     if uploaded_file is not None:
-        try:
-            df_to_analyze = pd.read_csv(uploaded_file)
-            source_name = uploaded_file.name
-        except Exception as e:
-            st.error(f"Error parsing CSV: {e}")
-            return
+        file_id = f"{uploaded_file.name}_{uploaded_file.size}"
+        if st.session_state.get("last_uploaded_file_id") != file_id:
+            try:
+                st.session_state["batch_df"] = pd.read_csv(uploaded_file)
+                st.session_state["batch_source"] = uploaded_file.name
+                st.session_state["last_uploaded_file_id"] = file_id
+                st.session_state.pop("batch_result_df", None)
+            except Exception as e:
+                st.error(f"Error parsing CSV: {e}")
+                return
     elif use_sample_test:
         if config.SAMPLE_TEST_PATH.exists():
-            df_to_analyze = pd.read_csv(config.SAMPLE_TEST_PATH)
-            source_name = "Built-in Balanced Benchmark Slice (500 Samples)"
+            st.session_state["batch_df"] = pd.read_csv(config.SAMPLE_TEST_PATH)
+            st.session_state["batch_source"] = "Built-in Balanced Benchmark Slice (500 Samples)"
         elif config.DATASET_PATH.exists():
             df_full = pd.read_csv(config.DATASET_PATH)
             normal_sample = df_full[df_full[config.TARGET_COLUMN] == 0].sample(400, random_state=42)
             fraud_sample = df_full[df_full[config.TARGET_COLUMN] == 1].sample(min(100, (df_full[config.TARGET_COLUMN] == 1).sum()), random_state=42)
-            df_to_analyze = pd.concat([normal_sample, fraud_sample]).sample(frac=1.0, random_state=42).reset_index(drop=True)
-            source_name = "Built-in Balanced Benchmark Slice"
+            st.session_state["batch_df"] = pd.concat([normal_sample, fraud_sample]).sample(frac=1.0, random_state=42).reset_index(drop=True)
+            st.session_state["batch_source"] = "Built-in Balanced Benchmark Slice"
         else:
             st.warning("Sample dataset not found.")
             return
+        st.session_state.pop("batch_result_df", None)
 
-    if df_to_analyze is not None:
-        # Validate columns
-        missing_cols = [c for c in config.FEATURE_COLUMNS if c not in df_to_analyze.columns]
-        if missing_cols:
-            st.error(f"Missing required columns ({len(missing_cols)}): {missing_cols[:5]}...")
-            return
+    # Process if batch data exists in session_state
+    if "batch_df" in st.session_state and st.session_state["batch_df"] is not None:
+        df_to_analyze = st.session_state["batch_df"]
+        source_name = st.session_state.get("batch_source", "Uploaded Batch")
 
-        with st.spinner(f"Analyzing {len(df_to_analyze):,} records from '{source_name}'..."):
-            features = df_to_analyze[config.FEATURE_COLUMNS].copy()
-            scaled_features = scaler.transform(features)
-            reconstructions = model.predict(scaled_features, batch_size=256, verbose=0)
-            errors = compute_reconstruction_error(scaled_features, reconstructions)
-            preds, labels = classify_anomalies(errors, threshold=active_threshold)
+        # Compute predictions if not already in session state
+        if "batch_result_df" not in st.session_state:
+            missing_cols = [c for c in config.FEATURE_COLUMNS if c not in df_to_analyze.columns]
+            if missing_cols:
+                st.error(f"Missing required columns ({len(missing_cols)}): {missing_cols[:5]}...")
+                return
 
-            # Build result DataFrame
-            result_df = df_to_analyze.copy()
-            result_df["Reconstruction_Error"] = errors
-            result_df["Anomaly_Threshold"] = active_threshold
-            result_df["Anomaly_Status"] = labels
-            result_df["Predicted_Class"] = preds
+            with st.spinner(f"Analyzing {len(df_to_analyze):,} records from '{source_name}'..."):
+                features = df_to_analyze[config.FEATURE_COLUMNS].copy()
+                scaled_features = scaler.transform(features)
+                reconstructions = model.predict(scaled_features, batch_size=256, verbose=0)
+                errors = compute_reconstruction_error(scaled_features, reconstructions)
+                preds, labels = classify_anomalies(errors, threshold=active_threshold)
 
-            flagged_count = int(np.sum(preds == 1))
-            normal_count = int(np.sum(preds == 0))
-            flagged_pct = (flagged_count / len(result_df)) * 100.0
+                result_df = df_to_analyze.copy()
+                result_df["Reconstruction_Error"] = errors
+                result_df["Anomaly_Threshold"] = active_threshold
+                result_df["Anomaly_Status"] = labels
+                result_df["Predicted_Class"] = preds
+
+                st.session_state["batch_result_df"] = result_df
+        else:
+            result_df = st.session_state["batch_result_df"]
+
+        flagged_count = int(np.sum(result_df["Predicted_Class"] == 1))
+        normal_count = int(np.sum(result_df["Predicted_Class"] == 0))
+        flagged_pct = (flagged_count / len(result_df)) * 100.0
 
         # Summary Metric Row
         m1, m2, m3, m4 = st.columns(4)
@@ -529,6 +549,7 @@ def render_batch_analysis():
             "Filter Display Rows",
             ["All Records", "Potential Frauds Only (Flagged)", "Normal Only"],
             horizontal=True,
+            key="batch_filter_mode",
         )
 
         if filter_mode == "Potential Frauds Only (Flagged)":
@@ -551,6 +572,7 @@ def render_batch_analysis():
             data=csv_bytes,
             file_name="FraudLens_Audited_Report.csv",
             mime="text/csv",
+            key="download_audited_csv_btn",
         )
 
 
@@ -683,6 +705,22 @@ def render_single_transaction():
 
         is_fraud = rec_error > active_threshold
 
+        st.session_state["single_result"] = {
+            "rec_error": rec_error,
+            "is_fraud": is_fraud,
+            "active_threshold": active_threshold,
+            "scaled": scaled,
+            "reconstruction": reconstruction,
+        }
+
+    if "single_result" in st.session_state and st.session_state["single_result"] is not None:
+        res = st.session_state["single_result"]
+        rec_error = res["rec_error"]
+        is_fraud = res["is_fraud"]
+        active_threshold = res["active_threshold"]
+        scaled = res["scaled"]
+        reconstruction = res["reconstruction"]
+
         st.markdown("---")
         st.markdown("### 🔍 Forensic Analysis Results")
 
@@ -776,6 +814,13 @@ def render_single_transaction():
 
         # Scientific explanation of detection logic
         st.markdown(
+            f"""
+            > **Diagnostic Explanation**: The Deep Autoencoder was trained exclusively on 199,020 legitimate transactions.
+            > When exposed to this input, its reconstructed output differed by an average squared error of **`{rec_error:.4f}`** across the 30 dimensions.
+            > Because this {'**exceeds**' if is_fraud else '**remains below**'} the operational threshold of **`{active_threshold:.4f}`**,
+            > this transaction is classified as **`{'Potential Fraud' if is_fraud else 'Normal'}`**.
+            """
+        )
             f"""
             > **Diagnostic Explanation**: The Deep Autoencoder was trained exclusively on 199,020 legitimate transactions.
             > When exposed to this input, its reconstructed output differed by an average squared error of **`{rec_error:.4f}`** across the 30 dimensions.
