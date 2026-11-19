@@ -821,13 +821,6 @@ def render_single_transaction():
             > this transaction is classified as **`{'Potential Fraud' if is_fraud else 'Normal'}`**.
             """
         )
-            f"""
-            > **Diagnostic Explanation**: The Deep Autoencoder was trained exclusively on 199,020 legitimate transactions.
-            > When exposed to this input, its reconstructed output differed by an average squared error of **`{rec_error:.4f}`** across the 30 dimensions.
-            > Because this {'**exceeds**' if is_fraud else '**remains below**'} the operational threshold of **`{active_threshold:.4f}`**,
-            > this transaction is classified as **`{'Potential Fraud' if is_fraud else 'Normal'}`**.
-            """
-        )
 
 
 # -----------------------------------------------------------------------------
