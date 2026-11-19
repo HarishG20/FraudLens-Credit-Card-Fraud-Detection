@@ -1,0 +1,22 @@
+# Large raw dataset (150MB exceeds GitHub's 100MB per-file push limit)
+# Note: dataset/sample_test.csv is tracked so the cloud demo functions out-of-the-box
+dataset/creditcard.csv
+
+# Python byte code & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# OS artifacts
+.DS_Store
+Thumbs.db

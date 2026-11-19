@@ -1,0 +1,67 @@
+{
+    "autoencoder": {
+        "model": "Deep Autoencoder",
+        "threshold": 16.341851116689917,
+        "test_samples": 42722,
+        "test_frauds": 74,
+        "accuracy": 0.9978465427648519,
+        "precision": 0.3875,
+        "recall": 0.4189189189189189,
+        "f1_score": 0.4025974025974026,
+        "roc_auc": 0.9424354362803997,
+        "average_precision": 0.3402758798656318,
+        "confusion_matrix": [
+            [
+                42599,
+                49
+            ],
+            [
+                43,
+                31
+            ]
+        ],
+        "classification_report": {
+            "Normal": {
+                "precision": 0.9989916045213639,
+                "recall": 0.9988510598386794,
+                "f1-score": 0.9989213272364873,
+                "support": 42648.0
+            },
+            "Fraud": {
+                "precision": 0.3875,
+                "recall": 0.4189189189189189,
+                "f1-score": 0.4025974025974026,
+                "support": 74.0
+            },
+            "accuracy": 0.9978465427648519,
+            "macro avg": {
+                "precision": 0.693245802260682,
+                "recall": 0.7088849893787992,
+                "f1-score": 0.700759364916945,
+                "support": 42722.0
+            },
+            "weighted avg": {
+                "precision": 0.9979324223965902,
+                "recall": 0.9978465427648519,
+                "f1-score": 0.997888417484526,
+                "support": 42722.0
+            }
+        },
+        "error_stats": {
+            "normal_mean": 0.5305135357351823,
+            "normal_std": 1.4628569985821596,
+            "normal_max": 88.46970792305764,
+            "fraud_mean": 23.318189595984055,
+            "fraud_std": 25.932149665648893,
+            "fraud_max": 81.88972941623105
+        }
+    },
+    "isolation_forest_baseline": {
+        "model": "Isolation Forest (Baseline)",
+        "precision": 0.1702127659574468,
+        "recall": 0.21621621621621623,
+        "f1_score": 0.19047619047619047,
+        "roc_auc": 0.9408983406591735,
+        "average_precision": 0.09451609255088497
+    }
+}
