@@ -367,9 +367,9 @@ def render_overview():
             plot_bgcolor="rgba(15, 23, 42, 0.6)",
             font=dict(color="#94A3B8", family="Inter"),
             yaxis=dict(title="Reconstruction Error (MSE)", gridcolor="rgba(148, 163, 184, 0.1)"),
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-            margin=dict(l=20, r=20, t=30, b=20),
-            height=340,
+            legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1),
+            margin=dict(l=30, r=30, t=70, b=30),
+            height=370,
         )
         st.plotly_chart(fig_bar, use_container_width=True)
 
@@ -392,8 +392,8 @@ def render_overview():
             plot_bgcolor="rgba(0,0,0,0)",
             font=dict(color="#F8FAFC", family="Inter"),
             showlegend=False,
-            margin=dict(l=10, r=10, t=10, b=10),
-            height=340,
+            margin=dict(l=30, r=30, t=40, b=30),
+            height=370,
         )
         st.plotly_chart(fig_donut, use_container_width=True)
 
@@ -782,8 +782,8 @@ def render_single_transaction():
             fig_gauge.update_layout(
                 paper_bgcolor="rgba(0,0,0,0)",
                 font={"color": "#F8FAFC", "family": "Inter"},
-                height=260,
-                margin=dict(l=20, r=20, t=30, b=20),
+                height=320,
+                margin=dict(l=30, r=30, t=80, b=25),
             )
             st.plotly_chart(fig_gauge, use_container_width=True)
 
@@ -807,8 +807,8 @@ def render_single_transaction():
             plot_bgcolor="rgba(15, 23, 42, 0.6)",
             font=dict(color="#94A3B8", family="Inter"),
             yaxis=dict(title="Feature Squared Error ((x - x̂)²)", gridcolor="rgba(148, 163, 184, 0.1)"),
-            margin=dict(l=20, r=20, t=40, b=20),
-            height=280,
+            margin=dict(l=30, r=30, t=65, b=30),
+            height=320,
         )
         st.plotly_chart(fig_contrib, use_container_width=True)
 
