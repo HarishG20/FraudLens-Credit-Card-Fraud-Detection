@@ -612,12 +612,15 @@ def render_single_transaction():
 
     if c_pre1.button("🟢 Load Typical Legitimate Transaction"):
         st.session_state["selected_preset"] = "normal"
+        st.session_state.pop("single_result", None)
         st.rerun()
     if c_pre2.button("🔴 Load Known High-Loss Fraud Transaction"):
         st.session_state["selected_preset"] = "fraud"
+        st.session_state.pop("single_result", None)
         st.rerun()
     if c_pre3.button("⚪ Reset to Zero Vector"):
         st.session_state["selected_preset"] = "zero"
+        st.session_state.pop("single_result", None)
         st.rerun()
 
     # Pre-populate sample values based on preset
@@ -625,15 +628,15 @@ def render_single_transaction():
     default_vals = {}
     
     if preset_choice == "fraud":
-        # Realistic values from an actual known fraudulent sample
+        # High-loss confirmed fraud transaction (Reconstruction Error = 101.07 >> 16.34)
         default_vals = {
-            "Time": 406.0, "Amount": 149.62,
-            "V1": -2.312, "V2": 1.951, "V3": -1.609, "V4": 3.997, "V5": -0.522,
-            "V6": -1.426, "V7": -2.537, "V8": 1.391, "V9": -2.770, "V10": -2.772,
-            "V11": 3.202, "V12": -2.899, "V13": -0.595, "V14": -4.289, "V15": 0.389,
-            "V16": -1.140, "V17": -2.830, "V18": -0.016, "V19": 0.416, "V20": 0.126,
-            "V21": 0.517, "V22": -0.035, "V23": -0.465, "V24": 0.320, "V25": 0.044,
-            "V26": 0.177, "V27": 0.261, "V28": -0.143
+            "Time": 18088.0, "Amount": 1218.89,
+            "V1": -12.2240, "V2": 3.8542, "V3": -12.4668, "V4": 9.6483, "V5": -2.7270,
+            "V6": -4.4456, "V7": -21.9228, "V8": 0.3208, "V9": -4.4332, "V10": -11.2014,
+            "V11": 9.3288, "V12": -13.1049, "V13": 0.8885, "V14": -10.1402, "V15": 0.7135,
+            "V16": -10.0987, "V17": -17.5066, "V18": -8.0612, "V19": 1.6069, "V20": -2.1472,
+            "V21": -1.1598, "V22": -1.5041, "V23": -19.2543, "V24": 0.5449, "V25": -4.7816,
+            "V26": -0.0078, "V27": 3.0524, "V28": -0.7750
         }
     elif preset_choice == "zero":
         default_vals = {col: 0.0 for col in config.FEATURE_COLUMNS}
